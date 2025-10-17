@@ -157,3 +157,4 @@ C:\Users\angel\RiderProjects\LAB08-AguirreMiguel\LAB08-AguirreMiguel\obj\Debug\n
 C:\Users\angel\RiderProjects\LAB08-AguirreMiguel\LAB08-AguirreMiguel\obj\Debug\net9.0\LAB08-AguirreMiguel.pdb
 C:\Users\angel\RiderProjects\LAB08-AguirreMiguel\LAB08-AguirreMiguel\obj\Debug\net9.0\LAB08-AguirreMiguel.genruntimeconfig.cache
 C:\Users\angel\RiderProjects\LAB08-AguirreMiguel\LAB08-AguirreMiguel\obj\Debug\net9.0\ref\LAB08-AguirreMiguel.dll
+C:\Users\angel\RiderProjects\LAB08-AguirreMiguel\LAB08-AguirreMiguel\obj\Debug\net9.0\LAB08-AguirreMiguel.sourcelink.json

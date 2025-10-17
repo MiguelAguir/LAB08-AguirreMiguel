@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using LAB08_AguirreMiguel.Repositories;
 using LAB08_AguirreMiguel.Data;
 using System.Linq;
+using LAB09_AguirreMiguel.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/linq")]
@@ -11,17 +13,20 @@ public class LinqController : ControllerBase
     private readonly IRepository<Product> _productRepo;
     private readonly IRepository<Order> _orderRepo;
     private readonly IRepository<OrderDetail> _orderDetailRepo;
+    private readonly AppDbContext _context;
 
     public LinqController(
         IRepository<Client> clientRepo,
         IRepository<Product> productRepo,
         IRepository<Order> orderRepo,
-        IRepository<OrderDetail> orderDetailRepo)
+        IRepository<OrderDetail> orderDetailRepo,
+        AppDbContext context)
     {
         _clientRepo = clientRepo;
         _productRepo = productRepo;
         _orderRepo = orderRepo;
         _orderDetailRepo = orderDetailRepo;
+        _context = context;
     }
     [HttpGet("clients")]
     public IActionResult GetClientsByName(string name)
@@ -134,5 +139,78 @@ public class LinqController : ControllerBase
             .Distinct()
             .ToList();
         return Ok(clients);
+    }
+    [HttpGet("clients-with-orders")]
+    public IActionResult GetClientsWithOrders()
+    {
+        var clients = _context.Clients
+            .AsNoTracking()
+            .Select(c => new ClientOrdersDto
+            {
+                ClientId = c.ClientId,
+                ClientName = c.Name,
+                Orders = c.Orders.Select(o => new OrderDto
+                {
+                    OrderId = o.OrderId,
+                    OrderDate = o.OrderDate
+                }).ToList()
+            })
+            .ToList();
+        return Ok(clients);
+    }
+    [HttpGet("order-with-details/{orderId}")]
+    public IActionResult GetOrderWithDetails(int orderId)
+    {
+        var order = _context.Orders
+            .AsNoTracking()
+            .Include(o => o.OrderDetails)
+            .ThenInclude(od => od.Product)
+            .Where(o => o.OrderId == orderId)
+            .Select(o => new
+            {
+                OrderId = o.OrderId,
+                OrderDate = o.OrderDate,
+                Details = o.OrderDetails.Select(od => new OrderDetailsDto
+                {
+                    OrderId = od.OrderId,
+                    ProductName = od.Product.Name,
+                    Quantity = od.Quantity
+                }).ToList()
+            })
+            .FirstOrDefault();
+        return order != null ? Ok(order) : NotFound();
+    }
+    [HttpGet("clients-total-products")]
+    public IActionResult GetClientsTotalProducts()
+    {
+        var clientProducts = _context.Clients
+            .AsNoTracking()
+            .Select(c => new ClientTotalProductsDto
+            {
+                ClientId = c.ClientId,
+                ClientName = c.Name,
+                TotalProducts = _context.OrderDetails
+                    .Where(od => od.Order.ClientId == c.ClientId)
+                    .Sum(od => od.Quantity)
+            })
+            .ToList();
+        return Ok(clientProducts);
+    }
+    [HttpGet("client-sales")]
+    public IActionResult GetClientSales()
+    {
+        var sales = _context.Clients
+            .AsNoTracking()
+            .Select(c => new ClientSalesDto
+            {
+                ClientId = c.ClientId,
+                ClientName = c.Name,
+                TotalSales = _context.OrderDetails
+                    .Where(od => od.Order.ClientId == c.ClientId)
+                    .Sum(od => od.Quantity * od.Product.Price)
+            })
+            .OrderByDescending(c => c.TotalSales)
+            .ToList();
+        return Ok(sales);
     }
 }
